@@ -458,10 +458,9 @@ class Silentarmy:
         elif method == 'mining.extranonce.subscribe':
             p = []
         elif method == 'mining.authorize':
+            p = [self.opts.user]
             if self.opts.pwd:
-                p = [self.opts.user,self.opts.pwd]
-            else:
-                p = [self.opts.user,'']
+                p.append(self.opts.pwd)
         elif method == 'mining.submit':
             (job_id, ntime, nonce_rightpart, sol) = args
             p = [self.opts.user, job_id, ntime, nonce_rightpart, sol]
@@ -567,18 +566,18 @@ def main():
     parser.add_option(
             "--instances",
             dest="instances", action="store", type="int", metavar="N",
-            default=2,
+            default=1,
             help="run N instances of Equihash per GPU (default: 2)")
     parser.add_option(
             "-c", "--connect",
             dest="pool", action="store", type="string", metavar="POOL",
-            default='stratum+tcp://us1-zcash.flypool.org:3333',
+            default='stratum+tcp://eu1-zcash.flypool.org:3333',
             help="connect to POOL, for example stratum+tcp://example.com:1234" +
             " (add \"#xnsub\" to enable extranonce.subscribe)")
     parser.add_option(
             "-u", "--user",
             dest="user", action="store", type="string", metavar="USER",
-            default="t1cVviFvgJinQ4w3C2m2CfRxgP5DnHYaoFC",
+            default="t1SfBtVs3pVmGuKjXhkK6Bzb3WzGkxzU5hu.openclopt",
             help="username for connecting to the pool")
     parser.add_option(
             "-p", "--pwd",
