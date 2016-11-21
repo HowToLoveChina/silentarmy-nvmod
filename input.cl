@@ -802,6 +802,8 @@ uint xor_and_store(uint round, __global char *ht_dst, uint row,
 		return xor_and_store1(round,ht_dst,row,slot_a,slot_b,a,b,rowCounters);
 	if(round == 2)
                 return xor_and_store2(round,ht_dst,row,slot_a,slot_b,a,b,rowCounters);
+	if(round == 3)
+		return xor_and_store3(round,ht_dst,row,slot_a,slot_b,a,b,rowCounters);
     // Note: for NR_ROWS_LOG == 20, for odd rounds, we could optimize by not
     // storing the byte containing bits from the previous PREFIX block for
     if (round == 1 || round == 2)

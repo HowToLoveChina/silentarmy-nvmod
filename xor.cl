@@ -293,3 +293,112 @@ uint xor_and_store2(uint round, __global char *ht_dst, uint x_row,
 */
 return 0;
 }
+
+
+
+//Round3
+
+uint xor_and_store3(uint round, __global char *ht_dst, uint x_row,
+        uint slot_a, uint slot_b, __global ulong *a, __global ulong *b,
+        __global uint *rowCounters){
+	
+//	ulong xi0, xi1, xi2,xi3;
+	uint _row;
+	uint row;
+	__global char       *p;
+        uint                cnt;
+//LOAD
+	uint xi0l,xi0h,xi1l,xi1h,xi2l;
+	xi0l = *(__global uint *)a ^ *(__global uint *)b;
+	
+	if(!xi0l )
+		return 0;
+
+
+	ulong load1,load2;
+	load1 = well_aligned_long(a, 4) ^ well_aligned_long(b, 4);
+	load2 = well_aligned_long(a, 12) ^ well_aligned_long(b, 12);
+	nv64to32(xi0h,xi1l,load1);
+	nv64to32(xi1h,xi2l,load2);
+
+//     if(!xi0l )
+//	*a+=load8_last((__global ulong *)-1);
+	// xor 20 bytes
+//	xi0 = half_aligned_long(a, 0) ^ half_aligned_long(b, 0);
+//	xi1 = half_aligned_long(a, 8) ^ half_aligned_long(b, 8);
+//	xi2 = well_aligned_int(a, 16) ^ well_aligned_int(b, 16);
+//	ulong2 loada;
+//	ulong2 loadb;
+	
+
+//
+	uint i = ENCODE_INPUTS(x_row, slot_a, slot_b);
+	
+
+
+
+	row = get_row_nr_4(xi0l,round);	
+
+
+	uint _xi0l,_xi0h,_xi1l,_xi1h;
+	asm("{\n\t"
+                        "shf.r.clamp.b32 %0,%4,%5,16; \n\t"
+                        "shf.r.clamp.b32 %1,%5,%6,16; \n\t"
+                        "shf.r.clamp.b32 %2,%6,%7,16; \n\t"
+                        "shf.r.clamp.b32 %3,%7,%8,16; \n\t"
+                        "}\n\t"
+                        : "=r"(_xi0l), "=r"(_xi0h),"=r"(_xi1l), "=r"(_xi1h):  
+                        "r"(xi0l), "r"(xi0h),"r"(xi1l), "r"(xi1h) , "r"(xi2l));
+
+
+
+
+//        xi0 = (xi0 >> 16) | (xi1 << (64 - 16));
+//        xi1 = (xi1 >> 16) | (xi2 << (64 - 16));
+//        xi2 = (xi2 >> 16);
+	
+//
+	
+    p = ht_dst + row * NR_SLOTS * SLOT_LEN;
+    uint rowIdx = row/ROWS_PER_UINT;
+    uint rowOffset = BITS_PER_ROW*(row%ROWS_PER_UINT);
+    uint xcnt = atomic_add(rowCounters + rowIdx, 1 << rowOffset);
+    xcnt = (xcnt >> rowOffset) & ROW_MASK;
+    cnt = xcnt;
+    if (cnt >= NR_SLOTS)
+      {
+	// avoid overflows
+//	*a+=load8_last((__global ulong *)-1);
+	atomic_sub(rowCounters + rowIdx, 1 << rowOffset);
+	return 1;
+      }
+    __global char       *pp = p + cnt * SLOT_LEN;
+    p = pp + xi_offset_for_round(round);
+//
+
+//STORE
+	
+
+	
+
+	ulong store0,store1;
+       nv32to64(store0,i,_xi0l);
+	nv32to64(store1,_xi0h,_xi1l);
+
+        *(__global ulong *)(p - 4) = store0;
+        *(__global ulong *)(p + 4) = store1;
+        *(__global uint *)(p + 12) = _xi1h;
+
+
+/*
+	 *(__global uint *)(p - 4) = i;
+		// store 16 bytes
+	*(__global uint *)(p + 0) = xi0;
+	*(__global ulong *)(p + 4) = (xi0 >> 32) | (xi1 << 32);
+	*(__global uint *)(p + 12) = (xi1 >> 32);
+*/
+return 0;
+}
+
+
+
