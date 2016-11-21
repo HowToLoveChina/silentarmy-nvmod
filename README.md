@@ -1,5 +1,34 @@
 # SILENTARMY
 
+#WARNING WARNING WARNING
+
+This is optimized nvidia branch of sa-miner
+Compile with cuda8.
+
+###Difference from original version?
+0. Last eXtremal's changes
+1. Reverted back to #1v Kubuxu's CPU fix 
+2. 64 -> 128 local threads
+3. some ht_store optimisations
+4. param.h tuning
+5. some asm(nv only) optimisations... not finished
+6. some cache(nv only) optimisations... not finished
+
+###Performance 6x1070, Linux, +1600mem (it seems that on Linux +1600 = +800 on win), samsung memory
+
+```
+Total 738.4 sol/s [dev0 112.4, dev1 127.8, dev2 123.3, dev3 127.0, dev4 123.4, dev5 122.8] 79 shares
+Total 739.3 sol/s [dev0 114.2, dev1 127.6, dev2 123.8, dev3 126.4, dev4 124.5, dev5 120.7] 79 shares
+Total 741.5 sol/s [dev0 119.8, dev1 126.3, dev2 122.5, dev3 125.6, dev4 124.8, dev5 121.2] 79 shares
+Total 740.1 sol/s [dev0 119.0, dev1 119.7, dev2 120.3, dev3 127.2, dev4 121.0, dev5 125.8] 79 shares
+Total 740.5 sol/s [dev0 118.1, dev1 119.0, dev2 121.2, dev3 129.7, dev4 122.8, dev5 125.2] 80 shares
+Total 740.3 sol/s [dev0 118.6, dev1 118.0, dev2 121.1, dev3 129.1, dev4 121.5, dev5 123.8] 82 shares
+Total 740.3 sol/s [dev0 118.1, dev1 115.6, dev2 129.5, dev3 129.7, dev4 118.9, dev5 123.0] 82 shares
+Total 737.3 sol/s [dev0 118.0, dev1 114.8, dev2 129.4, dev3 123.3, dev4 123.5, dev5 123.5] 82 shares
+Total 737.6 sol/s [dev0 117.9, dev1 114.6, dev2 125.6, dev3 123.5, dev4 121.5, dev5 125.1] 83 shares
+```
+
+
 Official site: https://github.com/mbevand/silentarmy
 
 SILENTARMY is a free open source [Zcash](https://z.cash) miner for Linux
