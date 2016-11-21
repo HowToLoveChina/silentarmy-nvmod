@@ -14,7 +14,7 @@ CFLAGS = -O2 -std=gnu99 -pedantic -Wextra -Wall \
 LDFLAGS = -rdynamic -L${LIBOPENCL}
 LDLIBS = -lOpenCL
 OBJ = main.o blake.o sha256.o
-INCLUDES = blake.h param.h _kernel.h sha256.h
+INCLUDES = blake.h param.h _kernel.h sha256.h 
 
 all : sa-solver
 
@@ -23,7 +23,7 @@ sa-solver : ${OBJ}
 
 ${OBJ} : ${INCLUDES}
 
-_kernel.h : input.cl param.h
+_kernel.h : input.cl param.h xor.cl
 	echo 'const char *ocl_code = R"_mrb_(' >$@
 	cpp $< >>$@
 	echo ')_mrb_";' >>$@

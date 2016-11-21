@@ -1417,7 +1417,7 @@ int main(int argc, char **argv)
     uint32_t            header_len;
     char		*hex_header = NULL;
     int32_t             i;
-	//printf("NR_ROWS=%d\n",NR_ROWS);
+//	printf("NR_ROWS=%d,NR_SLOTS=%d\n",NR_ROWS,NR_SLOTS);
     while (-1 != (i = getopt_long_only(argc, argv, "", optlong, 0)))
         switch (i)
           {

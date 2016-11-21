@@ -789,6 +789,7 @@ ulong well_aligned_long(__global ulong *_p, uint offset)
 ** Return 0 if successfully stored, or 1 if the row overflowed.
 */
 
+#include "xor.cl"
 
 uint xor_and_store(uint round, __global char *ht_dst, uint row,
 	uint slot_a, uint slot_b, __global ulong *a, __global ulong *b,
@@ -796,6 +797,9 @@ uint xor_and_store(uint round, __global char *ht_dst, uint row,
 {
     ulong xi0, xi1, xi2;
 #if NR_ROWS_LOG >= 16 && NR_ROWS_LOG <= 20
+
+	if(round == 1)
+		return xor_and_store1(round,ht_dst,row,slot_a,slot_b,a,b,rowCounters);
     // Note: for NR_ROWS_LOG == 20, for odd rounds, we could optimize by not
     // storing the byte containing bits from the previous PREFIX block for
     if (round == 1 || round == 2)
