@@ -46,20 +46,11 @@ __constant ulong blake_iv[] =
 /*
 ** Reset counters in hash table.
 */
-
-// ulong * 4 = 32byte 
 __kernel
-void kernel_init_ht(__global char *ht, __global ulong4 *rowCounters)
+void kernel_init_ht(__global char *ht, __global uint *rowCounters)
 {
     rowCounters[get_global_id(0)] = 0;
 }
-
-
-
-//void write_ulong_once(__global ulong *p,ulong d){
-//        asm volatile ( "st.global.wt.b64  [%0], %1;\n\t" :: "l"(p) , "l"(d));
-//}
-
 
 /*
 ** If xi0,xi1,xi2,xi3 are stored consecutively in little endian then they
@@ -164,7 +155,6 @@ uint ht_store32(uint round, __global char *ht, uint i,
     nv64to32(xi0l,xi0h,xi0);
     nv64to32(xi1l,xi1h,xi1);
     nv64to32(xi2l,xi2h,xi2);
-
         uint _xi0l,_xi0h,_xi1l,_xi1h,_xi2l,_xi2h,_xi3l,_xi3h;
         asm("{\n\t"
                         "shf.r.clamp.b32 %0,%8,%9,%16; \n\t"
@@ -178,7 +168,6 @@ uint ht_store32(uint round, __global char *ht, uint i,
                         "}\n\t"
                         : "=r"(_xi0l), "=r"(_xi0h),"=r"(_xi1l), "=r"(_xi1h), "=r"(_xi2l), "=r"(_xi2h),"=r"(_xi3l), "=r"(_xi3h):  
 			"r"(xi0l), "r"(xi0h),"r"(xi1l), "r"(xi1h) , "r"(xi2l), "r"(xi2h),"r"(xi3l), "r"(xi3h) , "r"(16));
-
 */
 
     if (round == 3)
@@ -229,7 +218,6 @@ uint ht_store32(uint round, __global char *ht, uint i,
 	*(__global ulong *)(p + 0) = store;
 	nv32to64(store,_xi1l,_xi1h);
         *(__global ulong *)(p + 8) = store;
-
 */	
 /*
 	*(__global uint *)(p - 4) = i;
@@ -237,14 +225,12 @@ uint ht_store32(uint round, __global char *ht, uint i,
     nv32to64(xi0,xi0l,xi0h);
     nv32to64(xi1,xi1l,xi1h);
     nv32to64(xi2,xi2l,xi2h);
-
     xi0 = (xi0 >> 16) | (xi1 << (64 - 16));
     xi1 = (xi1 >> 16);
         
 //    nv64to32(xi0l,xi0h,xi0);
 //    nv64to32(xi1l,xi1h,xi1);
 //    nv64to32(xi2l,xi2h,xi2);
-
 	*(__global ulong *)(p + 0) = xi0;
 	*(__global ulong *)(p + 8) = xi1;
 */
@@ -333,7 +319,6 @@ uint                tlid = get_local_id(0);
                         "shr.b32 %3,%7,%8; \n\t"
 			"}\n\t"
 			: "=r"(_xi0l), "=r"(_xi0h),"=r"(_xi1l), "=r"(_xi1h):  "r"(xi0l), "r"(xi0h),"r"(xi1l), "r"(xi1h) , "r"(16));
-
 	nv32to64(xi0,_xi0l,_xi0h);
 */
 
@@ -347,7 +332,6 @@ uint                tlid = get_local_id(0);
                         "shf.r.clamp.b32 %1,%5,%6,%8; \n\t"
                         "}\n\t"
                         : "=r"(_xi0l), "=r"(_xi0h),"=r"(_xi1l), "=r"(_xi1h):  "r"(xi0l), "r"(xi0h),"r"(xi1l), "r"(xi1h) , "r"(16));
-
         nv32to64(xi0,_xi0l,_xi0h);
 */
 
@@ -429,13 +413,11 @@ uint                tlid = get_local_id(0);
       {
 	// store 16 bytes
 	//8 byte align	
-/*
+
 	*(__global ulong *)(p - 4) = ((ulong)i) | (xi0 << 32);
 	*(__global ulong *)(p + 4) = (xi0 >> 32) | (xi1 << 32);
 	*(__global uint *)(p + 12) = (xi1 >> 32);
-
 	*(__global uint *)(p - 4) = i;
-
 	uint xi0l, xi0h, xi1l, xi1h;
         nv64to32(xi0l, xi0h, xi0);
         nv64to32(xi1l, xi1h, xi1);
@@ -444,7 +426,7 @@ uint                tlid = get_local_id(0);
         nv32to64(s1,xi0h,xi1l);
         *(__global ulong *)(p + 4) = s1;
 	*(__global uint *)(p + 12) = xi1h;
-*/
+
 //	*(__global uint *)(p + 0) = xi0;
 //	*(__global ulong *)(p + 4) = (xi0 >> 32) | (xi1 << 32);
 //	*(__global uint *)(p + 12) = (xi1 >> 32);
@@ -507,6 +489,8 @@ uint                tlid = get_local_id(0);
 }
 
 
+
+
 #define mix(va, vb, vc, vd, x, y) \
     va = (va + vb + x); \
 vd = rotate((vd ^ va), (ulong)64 - 32); \
@@ -553,14 +537,14 @@ void kernel_round0(__global ulong *blake_state, __global char *ht,
 	v[9] =  blake_iv[1];
 	v[10] = blake_iv[2];
 	v[11] = blake_iv[3];
-	v[12] = blake_iv[4] ^  (ZCASH_BLOCK_HEADER_LEN + 4);
+	v[12] = blake_iv[4];
 	v[13] = blake_iv[5];
-	v[14] = blake_iv[6] ^ (ulong)(-1);
+	v[14] = blake_iv[6];
 	v[15] = blake_iv[7];
 	// mix in length of data
-//	v[12] ^= ZCASH_BLOCK_HEADER_LEN + 4 /* length of "i" */;
+	v[12] ^= ZCASH_BLOCK_HEADER_LEN + 4 /* length of "i" */;
 	// last block
-//	v[14] ^= (ulong)-1;
+	v[14] ^= (ulong)-1;
 
 	// round 1
 	mix(v[0], v[4], v[8],  v[12], 0, word1);
@@ -742,6 +726,7 @@ void kernel_round0(__global ulong *blake_state, __global char *ht,
 #error "unsupported NR_ROWS_LOG"
 #endif
 
+
 uint read_uint_once(__global uint *p){
 	uint r;
 	asm volatile( "ld.global.cg.b32  %0, [%1];\n\t" : "=r"(r) : "l"(p));
@@ -890,7 +875,6 @@ uint xor_and_store(uint round, __global char *ht_dst, uint row,
         xi0h = well_aligned_int(a, 4) ^ well_aligned_int(b, 4);
         xi1l = well_aligned_int(a, 8) ^ well_aligned_int(b, 8);
         xi1h = well_aligned_int(a, 12) ^ well_aligned_int(b, 12);
-
         uint _xi0l,_xi0h,_xi1l,_xi1h,_xi2l,_xi2h,_xi3l,_xi3h;
         asm("{\n\t"
                         "shf.r.clamp.b32 %0,%8,%9,%16; \n\t"
@@ -959,6 +943,7 @@ uint xor_and_store(uint round, __global char *ht_dst, uint row,
 	    xi0, xi1, xi2, 0, rowCounters);
 }
 
+
 /*
 ** Execute one Equihash round. Read from ht_src, XOR colliding pairs of Xi,
 ** store them in ht_dst.
@@ -967,21 +952,24 @@ void equihash_round(uint round,
   __global char *ht_src,
   __global char *ht_dst,
   __global uint *debug,
-  __local uint *first_words_data,
   __local uint *collisionsData,
   __local uint *collisionsNum,
   __global uint *rowCountersSrc,
-  __global uint *rowCountersDst,
-  uint threadsPerRow)
+  __global uint *rowCountersDst)
 {
-    uint globalTid = get_global_id(0) / threadsPerRow;
-    uint localTid = get_local_id(0) / threadsPerRow;
-    uint localGroupId = get_local_id(0) % threadsPerRow;
-    __local uint *first_words = &first_words_data[NR_SLOTS*localTid];
+    uint globalTid = get_global_id(0) / THREADS_PER_ROW;
+    uint localRowIdx = get_local_id(0) / THREADS_PER_ROW;
+    uint localTid = get_local_id(0) % THREADS_PER_ROW;
+    __local uint slotCountersData[COLLISION_TYPES_NUM*ROWS_PER_WORKGROUP];
+    __local ushort slotsData[COLLISION_TYPES_NUM*COLLISION_BUFFER_SIZE*ROWS_PER_WORKGROUP];
+    
+    __local uint *slotCounters = &slotCountersData[COLLISION_TYPES_NUM*localRowIdx];
+    __local ushort *slots = &slotsData[COLLISION_TYPES_NUM*COLLISION_BUFFER_SIZE*localRowIdx];
     
     __global char *p;
     uint    cnt;
     uchar   mask;
+    uint    shift;
     uint    i, j;
     // NR_SLOTS is already oversized (by a factor of OVERHEAD), but we want to
     // make it even larger
@@ -995,21 +983,23 @@ void equihash_round(uint round,
     // the mask is also computed to read data from the previous round
 #if NR_ROWS_LOG <= 16
     mask = ((!(round % 2)) ? 0x0f : 0xf0);
+    shift = ((!(round % 2)) ? 0 : 4);
 #elif NR_ROWS_LOG == 18
     mask = ((!(round % 2)) ? 0x03 : 0x30);
+    shift = ((!(round % 2)) ? 0 : 4);    
 #elif NR_ROWS_LOG == 19
     mask = ((!(round % 2)) ? 0x01 : 0x10);
+    shift = ((!(round % 2)) ? 0 : 4);    
 #elif NR_ROWS_LOG == 20
     mask = 0; /* we can vastly simplify the code below */
+    shift = 0;
 #else
 #error "unsupported NR_ROWS_LOG"
 #endif    
     
-  
-  for (uint chunk = 0; chunk < threadsPerRow; chunk++) {
-    uint tid = globalTid + NR_ROWS/threadsPerRow*chunk;
-    uint gid = tid & ~(get_local_size(0) / threadsPerRow - 1);
-//   for (uint tid = get_global_id(0)/threadsPerRow; tid < NR_ROWS; tid += get_global_size(0)/threadsPerRow) {
+  for (uint chunk = 0; chunk < THREADS_PER_ROW; chunk++) {
+    uint tid = globalTid + NR_ROWS/THREADS_PER_ROW*chunk;
+    uint gid = tid & ~(ROWS_PER_WORKGROUP - 1);
     
     uint rowIdx = tid/ROWS_PER_UINT;
     uint rowOffset = BITS_PER_ROW*(tid%ROWS_PER_UINT);
@@ -1019,43 +1009,36 @@ void equihash_round(uint round,
     *collisionsNum = 0;
     p = (ht_src + tid * NR_SLOTS * SLOT_LEN);
     p += xi_offset;
-    p += SLOT_LEN*localGroupId;
-    for (i = localGroupId; i < cnt; i += threadsPerRow, p += SLOT_LEN*threadsPerRow)
-	first_words[i] = read_uint_once((__global uint *)p) & mask;
-     // first_words[i] = (*(__global uint *)p) & mask;
+    p += SLOT_LEN*localTid;
+
+    for (i = get_local_id(0); i < COLLISION_TYPES_NUM*ROWS_PER_WORKGROUP; i += get_local_size(0))
+      slotCountersData[i] = 0;
     barrier(CLK_LOCAL_MEM_FENCE);
     
-    if (cnt == 0)
-  // no elements in row, no collisions
-  goto part2;  
-    // find collisions
-    for (i = 0; i < cnt-1; i++)
-      {
-  uint data_i = first_words[i];
-  uint collision = (localTid << 24) | (i << 12) | (i + 1 + localGroupId);
-  uint ii=0;
-  for (j = i + 1 + localGroupId; j < cnt; j += threadsPerRow)
-    {
-      if (data_i == first_words[j])
-        {
-//	if (ii >= (LDS_COLL_SIZE-1)) {
-  //        goto part2;
-    //    } 
-    	ii = atomic_inc(collisionsNum);
-    //if (index >= LDS_COLL_SIZE) {
-    //  atomic_dec(collisionsNum);
-    //  goto part2;
-    //}
-//    collisionsData[(index >= LDS_COLL_SIZE) ? (LDS_COLL_SIZE - 1) : index] = collision;
-	collisionsData[ii] = collision;
-        }
-      collision += threadsPerRow;
+    for (i = localTid; i < cnt; i += THREADS_PER_ROW, p += SLOT_LEN*THREADS_PER_ROW) {
+      uchar x = ((*(__global uchar *)p) & mask) >> shift;
+      uint slotIdx = atomic_inc(&slotCounters[x]);
+      slotIdx = min(slotIdx, COLLISION_BUFFER_SIZE-1);
+      slots[COLLISION_BUFFER_SIZE*x+slotIdx] = i;
     }
+    
+    barrier(CLK_LOCAL_MEM_FENCE);
+    const uint ct_groupsize = max(1u, THREADS_PER_ROW / COLLISION_TYPES_NUM);
+    for (uint collTypeIdx = localTid / ct_groupsize; collTypeIdx < COLLISION_TYPES_NUM; collTypeIdx += THREADS_PER_ROW / ct_groupsize) {
+      const uint N = min((uint)slotCounters[collTypeIdx], COLLISION_BUFFER_SIZE);
+      for (uint i = 0; i < N; i++) {
+        uint collision = (localRowIdx << 24) | (slots[COLLISION_BUFFER_SIZE*collTypeIdx+i] << 12);
+        for (uint j = i + 1 + localTid % ct_groupsize; j < N; j += ct_groupsize) {
+          uint index = atomic_inc(collisionsNum);
+          index = min(index, (uint)(LDS_COLL_SIZE-1));
+          collisionsData[index] = collision | slots[COLLISION_BUFFER_SIZE*collTypeIdx+j];
+        }
       }
+    }
 
-part2:;
     barrier(CLK_LOCAL_MEM_FENCE);
     uint totalCollisions = *collisionsNum;
+    totalCollisions = min(totalCollisions, (uint)LDS_COLL_SIZE);
     for (uint index = get_local_id(0); index < totalCollisions; index += get_local_size(0))
       {
   uint collision = collisionsData[index];
@@ -1086,11 +1069,10 @@ void kernel_round ## N(__global char *ht_src, __global char *ht_dst, \
 	__global uint *rowCountersSrc, __global uint *rowCountersDst, \
        	__global uint *debug) \
 { \
-    __local uint first_words_data[NR_SLOTS*(THRD/THREADS_PER_ROW)]; \
     __local uint    collisionsData[LDS_COLL_SIZE]; \
     __local uint    collisionsNum; \
-    equihash_round(N, ht_src, ht_dst, debug, first_words_data, collisionsData, \
-	    &collisionsNum, rowCountersSrc, rowCountersDst, THREADS_PER_ROW); \
+    equihash_round(N, ht_src, ht_dst, debug, collisionsData, \
+	    &collisionsNum, rowCountersSrc, rowCountersDst); \
 }
 KERNEL_ROUND(1)
 KERNEL_ROUND(2)
@@ -1107,11 +1089,10 @@ void kernel_round8(__global char *ht_src, __global char *ht_dst,
 	__global uint *debug, __global sols_t *sols)
 {
     uint		tid = get_global_id(0);
-    __local uint	first_words_data[NR_SLOTS*(THRD/THREADS_PER_ROW)];
     __local uint	collisionsData[LDS_COLL_SIZE];
     __local uint	collisionsNum;
-    equihash_round(8, ht_src, ht_dst, debug, first_words_data, collisionsData,
-	    &collisionsNum, rowCountersSrc, rowCountersDst, THREADS_PER_ROW);
+    equihash_round(8, ht_src, ht_dst, debug, collisionsData,
+	    &collisionsNum, rowCountersSrc, rowCountersDst);
     if (!tid)
 	sols->nr = sols->likely_invalids = 0;
 }
@@ -1243,10 +1224,8 @@ void kernel_sols(__global char *ht0, __global char *ht1, __global sols_t *sols,
     for (i = localGroupId; i < cnt; i += THREADS_PER_ROW, p += SLOT_LEN*THREADS_PER_ROW) {
       refsPtr[i] = *(__global uint *)(p - 4);
       dataPtr[i] = (*(__global uint *)p) & mask;
-	//refsPtr[i] = read_uint_once((__global uint *)(p - 4));
-//	dataPtr[i] = read_uint_once((__global uint *)p) & mask;
     }
-    //barrier(CLK_LOCAL_MEM_FENCE);
+    barrier(CLK_LOCAL_MEM_FENCE);
     
     for (i = 0; i < cnt; i++)
       {

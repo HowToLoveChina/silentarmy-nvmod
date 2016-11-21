@@ -507,7 +507,7 @@ size_t select_work_size_blake(void)
 void init_ht(cl_command_queue queue, cl_kernel k_init_ht, cl_mem buf_ht,
 	cl_mem rowCounters)
 {
-    size_t      global_ws = NR_ROWS / ROWS_PER_UINT / 8;
+    size_t      global_ws = NR_ROWS / ROWS_PER_UINT;
     size_t      local_ws = 256;
     cl_int      status;
 #if 0
@@ -1417,6 +1417,7 @@ int main(int argc, char **argv)
     uint32_t            header_len;
     char		*hex_header = NULL;
     int32_t             i;
+	//printf("NR_ROWS=%d\n",NR_ROWS);
     while (-1 != (i = getopt_long_only(argc, argv, "", optlong, 0)))
         switch (i)
           {
