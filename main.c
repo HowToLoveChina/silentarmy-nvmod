@@ -821,7 +821,7 @@ uint32_t verify_sols(cl_command_queue queue, cl_mem buf_sols, uint64_t *nonce,
  	if (kern_avg == 0)
  	kern_avg = a_diff;
  	else
- 	kern_avg = kern_avg * 70 / 100 + a_diff * 28 / 100; // it is 2% less than average
+ 	kern_avg = kern_avg * 70 / 100 + a_diff * 27.5 / 100; // it is 2% less than average
  	// thus allowing time to reduce
  
  	kern_avg_run_time.tv_sec = (time_t)(kern_avg / 1e9);

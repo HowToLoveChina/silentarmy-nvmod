@@ -40,7 +40,7 @@
 #define COLLISION_TYPES_NUM             16u
 #define COLLISION_BUFFER_SIZE           16u
 #elif NR_ROWS_LOG == 18
-#define OVERHEAD                        1
+#define OVERHEAD                        4
 #define COLLISION_TYPES_NUM             4u
 #define COLLISION_BUFFER_SIZE           16u
 #elif NR_ROWS_LOG == 19

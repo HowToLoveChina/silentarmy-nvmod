@@ -76,15 +76,66 @@ uint row;
 	return row;
 }
 
-ulong load8_last(__global ulong *p){
+void store8(__global char *p,ulong store){
+	asm volatile ( "st.global.cs.b64  [%0], %1;\n\t" :: "l"(p), "l" (store));
+}
+
+void store4(__global char *p,uint store){
+        asm volatile ( "st.global.cs.b32  [%0], %1;\n\t" :: "l"(p), "r" (store));
+}
+
+void store_ulong2(__global char *p,ulong2 store){
+	asm volatile ( "st.global.cs.v2.b64  [%0],{ %1, %2 };\n\t" :: "l"(p), "l" (store.x), "l" (store.y));
+}
+
+void store_uint2(__global char *p,uint2 store){
+        asm volatile ( "st.global.cs.v2.b32  [%0],{ %1, %2 };\n\t" :: "l"(p), "r" (store.x), "r" (store.y));
+}
+
+void store_uint4(__global char *p,uint4 store){
+        asm volatile ( "st.global.cs.v4.b32  [%0],{ %1, %2, %3, %4 };\n\t" :: "l"(p), "r" (store.x), "r" (store.y), "r" (store.z), "r" (store.w));
+}
+
+ulong load8_last(__global ulong *p,uint offset){
+	p=(__global ulong *)((__global char *)p + offset); 
         ulong r;
-        asm volatile ( "ld.global.lu.b64  %0, [%1];\n\t" : "=l"(r) : "l"(p));
+        asm volatile ( "ld.global.cs.nc.b64  %0, [%1];\n\t" : "=l"(r) : "l"(p));
         return r;
-       // return *p;
+}
+
+ulong load8(__global ulong *p,uint offset){
+	p=(__global ulong *)((__global char *)p + offset); 
+        ulong r;
+        asm volatile ( "ld.global.cs.nc.b64  %0, [%1];\n\t" : "=l"(r) : "l"(p));
+        return r;
+}
+
+
+
+ulong2 load16l(__global ulong *p,uint offset){
+        p=(__global ulong *)((__global char *)p + offset); 
+        ulong2 r;
+        asm volatile ( "ld.global.cs.nc.v2.b64  {%0,%1}, [%2];\n\t" : "=l"(r.x), "=l"(r.y) : "l"(p));
+        return r;
+}
+
+
+uint load4_last(__global ulong *p,uint offset){
+	p=(__global ulong *)((__global char *)p + offset); 
+        uint r;
+        asm volatile ( "ld.global.cs.nc.b32  %0, [%1];\n\t" : "=r"(r) : "l"(p));
+        return r;
+}
+
+uint load4(__global ulong *p,uint offset){
+	p=(__global ulong *)((__global char *)p + offset); 
+        uint r;
+        asm volatile ( "ld.global.cs.nc.b32  %0, [%1];\n\t" : "=r"(r) : "l"(p));
+        return r;
 }
 
 void trigger_err(){
-	load8_last((__global ulong *)-1);
+	load8_last((__global ulong *)-1,0);
 }
 
 #define nv64to16(a,b,c,d,X) asm volatile( "mov.b64 {%0,%1,%2,%3}, %4; \n\t" : "=r"(a), "=r"(b), "=r"(c), "=r"(d) : "r"(X))
@@ -104,9 +155,10 @@ uint xor_and_store1(uint round, __global char *ht_dst, uint x_row,
 //LOAD
 
 	ulong2 loada,loadb;
-	xi0 = *(a++) ^ *(b++);
-	loada = *(__global ulong2 *)a;
-	loadb = *(__global ulong2 *)b;
+	xi0 = load8(a++,0) ^ load8(b++,0);
+//	loada = *(__global ulong2 *)a;
+	loada = load16l(a,0);
+	loadb = load16l(b,0);
 	xi1 = loada.x ^ loadb.x;
 	xi2 = loada.y ^ loadb.y;
 
@@ -172,11 +224,12 @@ uint xor_and_store1(uint round, __global char *ht_dst, uint x_row,
 	ulong2 store1;
 	nv32to64(store0.x,0,i);
 	store0.y=xi0;
-	*(__global ulong2 *)(pp)=store0;
+//	*(__global ulong2 *)(pp)=store0;
+	store_ulong2(pp,store0);
 	store1.x=xi1;
 	store1.y=xi2;
-	*(__global ulong2 *)(pp+16)=store1;
-
+//	*(__global ulong2 *)(pp+16)=store1;
+	store_ulong2(pp+16,store1);
 return 0;
 }
 
@@ -196,9 +249,9 @@ uint xor_and_store2(uint round, __global char *ht_dst, uint x_row,
         uint                cnt;
 //LOAD
 	ulong2 loada,loadb;
-	xi0 = *(a++) ^ *(b++);
-	loada = *(__global ulong2 *)a;
-	loadb = *(__global ulong2 *)b;
+	xi0 = load8(a++,0) ^ load8(b++,0);
+	loada = load16l(a,0);
+	loadb = load16l(b,0);
 	xi1 = loada.x ^ loadb.x;
 	xi2 = loada.y ^ loadb.y;
 
@@ -282,9 +335,10 @@ uint xor_and_store2(uint round, __global char *ht_dst, uint x_row,
 	store0.y=_xi1l;
 	store0.z=_xi1h;
 	store0.w=_xi2l;
-	*(__global uint2 *)(p - 4)=s0;
-        *(__global uint4 *)(p + 4)=store0;
-
+//	*(__global uint2 *)(p - 4)=s0;
+	store_uint2(p-4, s0);
+//        *(__global uint4 *)(p + 4)=store0;
+	store_uint4(p+4,store0);
 /*
 	*(__global uint *)(p - 4) = i;
 	*(__global uint *)(p + 0) = xi0;
@@ -309,15 +363,15 @@ uint xor_and_store3(uint round, __global char *ht_dst, uint x_row,
         uint                cnt;
 //LOAD
 	uint xi0l,xi0h,xi1l,xi1h,xi2l;
-	xi0l = *(__global uint *)a ^ *(__global uint *)b;
+	xi0l = load4(a,0) ^ load4(b,0);
 	
 	if(!xi0l )
 		return 0;
 
 
 	ulong load1,load2;
-	load1 = well_aligned_long(a, 4) ^ well_aligned_long(b, 4);
-	load2 = well_aligned_long(a, 12) ^ well_aligned_long(b, 12);
+	load1 = load8(a , 4) ^ load8(b , 4);
+	load2 = load8_last(a , 12) ^ load8_last(b , 12);
 	nv64to32(xi0h,xi1l,load1);
 	nv64to32(xi1h,xi2l,load2);
 
@@ -385,10 +439,12 @@ uint xor_and_store3(uint round, __global char *ht_dst, uint x_row,
        nv32to64(store0,i,_xi0l);
 	nv32to64(store1,_xi0h,_xi1l);
 
-        *(__global ulong *)(p - 4) = store0;
-        *(__global ulong *)(p + 4) = store1;
-        *(__global uint *)(p + 12) = _xi1h;
-
+//        *(__global ulong *)(p - 4) = store0;
+	store8(p - 4,store0);
+//        *(__global ulong *)(p + 4) = store1;
+	store8(p + 4,store1);
+//        *(__global uint *)(p + 12) = _xi1h;
+	store4(p + 12,_xi1h);
 
 /*
 	 *(__global uint *)(p - 4) = i;
@@ -420,12 +476,12 @@ uint xor_and_store4(uint round, __global char *ht_dst, uint x_row,
 	
 
 	uint xi0l,xi0h,xi1l,xi1h;
-	xi0l = well_aligned_int(a, 0) ^ well_aligned_int(b, 0);
+	xi0l = load4(a, 0) ^ load4(b, 0);
 	        if(!xi0l )
                 return 0;
-	xi0h = well_aligned_int(a, 4) ^ well_aligned_int(b, 4);
-	xi1l = well_aligned_int(a, 8) ^ well_aligned_int(b, 8);
-	xi1h = well_aligned_int(a, 12) ^ well_aligned_int(b, 12);
+	xi0h = load4(a, 4) ^ load4(b, 4);
+	xi1l = load4(a, 8) ^ load4(b, 8);
+	xi1h = load4_last(a, 12) ^ load4_last(b, 12);
 
 
 //	xi2 = 0;
@@ -478,7 +534,8 @@ uint xor_and_store4(uint round, __global char *ht_dst, uint x_row,
 
 //STORE
 
-*(__global uint *)(p - 4) = i;
+//*(__global uint *)(p - 4) = i;
+store4(p-4,i);
 //*(__global ulong *)(p + 0) = xi0;
 //*(__global ulong *)(p + 8) = xi1;
 uint4 store;
@@ -486,8 +543,8 @@ uint4 store;
 	store.y=_xi0h;
 	store.z=_xi1l;
 	store.w=_xi1h;
-*(__global uint4 *)(p + 0) = store;
-
+//*(__global uint4 *)(p + 0) = store;
+store_uint4(p + 0, store);
 return 0;
 }
 
@@ -510,12 +567,12 @@ uint xor_and_store5(uint round, __global char *ht_dst, uint x_row,
 	
 
 	uint xi0l,xi0h,xi1l,xi1h;
-	xi0l = well_aligned_int(a, 0) ^ well_aligned_int(b, 0);
+	xi0l = load4(a, 0) ^ load4(b, 0);
 	        if(!xi0l )
                 return 0;
-	xi0h = well_aligned_int(a, 4) ^ well_aligned_int(b, 4);
-	xi1l = well_aligned_int(a, 8) ^ well_aligned_int(b, 8);
-	xi1h = well_aligned_int(a, 12) ^ well_aligned_int(b, 12);
+	xi0h = load4(a, 4) ^ load4(b, 4);
+	xi1l = load4(a, 8) ^ load4(b, 8);
+	xi1h = load4_last(a, 12) ^ load4_last(b, 12);
 
 
 //	xi2 = 0;
@@ -568,7 +625,8 @@ uint xor_and_store5(uint round, __global char *ht_dst, uint x_row,
 
 //STORE
 
-*(__global uint *)(p - 4) = i;
+//*(__global uint *)(p - 4) = i;
+store4(p-4,i);
 //*(__global ulong *)(p + 0) = xi0;
 //*(__global ulong *)(p + 8) = xi1;
 uint4 store;
@@ -576,8 +634,8 @@ uint4 store;
 	store.y=_xi0h;
 	store.z=_xi1l;
 	store.w=_xi1h;
-*(__global uint4 *)(p + 0) = store;
-
+//*(__global uint4 *)(p + 0) = store;
+store_uint4(p + 0, store);
 return 0;
 }
 
@@ -598,11 +656,11 @@ uint xor_and_store6(uint round, __global char *ht_dst, uint x_row,
 //LOAD
 	uint xi0l,xi0h,xi1l;
 
-	xi0 = *a++ ^ *b++;
+	xi0 = load8(a++,0) ^ load8(b++,0);
 
 	if(!xi0 )
                 return 0;
-	xi1l = *(__global uint *)a ^ *(__global uint *)b;
+	xi1l = load4_last(a,0) ^ load4_last(b,0);
 	
 	nv64to32(xi0l,xi0h,xi0);
 
@@ -652,10 +710,11 @@ uint xor_and_store6(uint round, __global char *ht_dst, uint x_row,
 //	*(__global uint *)(p - 4) = i;
 	ulong store;
 	nv32to64(store,i,_xi0l);
-	*(__global ulong *)(p - 4)= store;
+	store8(p - 4,store);
+	// *(__global ulong *)(p - 4)= store;
 //	*(__global uint *)(p + 0) = _xi0l;
-	*(__global uint *)(p + 4) = _xi0h;
-
+//	*(__global uint *)(p + 4) = _xi0h;
+	store4(p+4,_xi0h);
 return 0;
 }
 
@@ -674,10 +733,10 @@ uint xor_and_store7(uint round, __global char *ht_dst, uint x_row,
 //LOAD
 
 	uint xi0l,xi0h;
-	xi0l = well_aligned_int(a, 0) ^ well_aligned_int(b, 0);
+	xi0l = load4(a, 0) ^ load4(b, 0);
 	        if(!xi0l )
                 return 0;
-	xi0h = well_aligned_int(a, 4) ^ well_aligned_int(b, 4);
+	xi0h = load4_last(a, 4) ^ load4_last(b, 4);
 //
 	uint i = ENCODE_INPUTS(x_row, slot_a, slot_b);
 	
@@ -717,9 +776,11 @@ uint xor_and_store7(uint round, __global char *ht_dst, uint x_row,
 	uint2 store;
 	store.x=i;
 	store.y=_xi0l;
-	*(__global uint2 *)(p - 4) = store;
+//	*(__global uint2 *)(p - 4) = store;
+	store_uint2(p-4,store);
 //	*(__global uint *)(p + 0) = _xi0l;
-	*(__global uint *)(p + 4) = _xi0h;
+//	*(__global uint *)(p + 4) = _xi0h;
+	store4(p + 4 , _xi0h);
 return 0;
 }
 
@@ -737,10 +798,10 @@ uint xor_and_store8(uint round, __global char *ht_dst, uint x_row,
 //LOAD
 
 	uint xi0l,xi0h;
-	xi0l = well_aligned_int(a, 0) ^ well_aligned_int(b, 0);
+	xi0l = load4(a, 0) ^ load4(b, 0);
 	        if(!xi0l )
                 return 0;
-	xi0h = well_aligned_int(a, 4) ^ well_aligned_int(b, 4);
+	xi0h = load4_last(a, 4) ^ load4_last(b, 4);
 //
 	uint i = ENCODE_INPUTS(x_row, slot_a, slot_b);
 	
@@ -781,8 +842,11 @@ uint xor_and_store8(uint round, __global char *ht_dst, uint x_row,
 //	uint2 store;
 //	store.x=i;
 //	store.y=_xi0l;
-	*(__global uint *)(p - 4) = i;
-	*(__global uint *)(p + 0) = _xi0l;
+
+//	*(__global uint *)(p - 4) = i;
+//	*(__global uint *)(p + 0) = _xi0l;
+	store4(p-4, i);
+	store4(p+0, _xi0l);
 return 0;
 }
 
