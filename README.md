@@ -8,24 +8,28 @@ Compile with cuda8.
 ###Difference from original version?
 0. Last eXtremal's changes
 1. Reverted back to #1v Kubuxu's CPU fix 
-2. 64 -> 128 local threads
+2. 64 -> 32 local threads
 3. some ht_store optimisations
 4. param.h tuning
 5. some asm(nv only) optimisations... not finished
-6. some cache(nv only) optimisations... not finished
+// 6. some cache(nv only) optimisations... not finished
 
 ###Performance 6x1070, Linux, +1600mem (it seems that on Linux +1600 = +800 on win), samsung memory
 
 ```
-Total 738.4 sol/s [dev0 112.4, dev1 127.8, dev2 123.3, dev3 127.0, dev4 123.4, dev5 122.8] 79 shares
-Total 739.3 sol/s [dev0 114.2, dev1 127.6, dev2 123.8, dev3 126.4, dev4 124.5, dev5 120.7] 79 shares
-Total 741.5 sol/s [dev0 119.8, dev1 126.3, dev2 122.5, dev3 125.6, dev4 124.8, dev5 121.2] 79 shares
-Total 740.1 sol/s [dev0 119.0, dev1 119.7, dev2 120.3, dev3 127.2, dev4 121.0, dev5 125.8] 79 shares
-Total 740.5 sol/s [dev0 118.1, dev1 119.0, dev2 121.2, dev3 129.7, dev4 122.8, dev5 125.2] 80 shares
-Total 740.3 sol/s [dev0 118.6, dev1 118.0, dev2 121.1, dev3 129.1, dev4 121.5, dev5 123.8] 82 shares
-Total 740.3 sol/s [dev0 118.1, dev1 115.6, dev2 129.5, dev3 129.7, dev4 118.9, dev5 123.0] 82 shares
-Total 737.3 sol/s [dev0 118.0, dev1 114.8, dev2 129.4, dev3 123.3, dev4 123.5, dev5 123.5] 82 shares
-Total 737.6 sol/s [dev0 117.9, dev1 114.6, dev2 125.6, dev3 123.5, dev4 121.5, dev5 125.1] 83 shares
+Total 836.0 sol/s [dev0 129.0, dev1 141.0, dev2 143.6, dev3 141.2, dev4 147.7, dev5 135.7] 55 shares
+Total 835.5 sol/s [dev0 131.4, dev1 139.4, dev2 143.6, dev3 139.7, dev4 145.0, dev5 136.8] 56 shares
+Total 833.7 sol/s [dev0 130.6, dev1 139.1, dev2 143.9, dev3 140.1, dev4 143.3, dev5 137.6] 56 shares
+Total 837.0 sol/s [dev0 129.5, dev1 138.2, dev2 146.0, dev3 139.7, dev4 139.6, dev5 137.6] 57 shares
+Total 837.9 sol/s [dev0 130.3, dev1 138.1, dev2 144.7, dev3 138.8, dev4 136.6, dev5 136.6] 58 shares
+Total 841.4 sol/s [dev0 132.3, dev1 138.8, dev2 145.7, dev3 138.8, dev4 137.9, dev5 136.7] 59 shares
+Total 842.2 sol/s [dev0 139.7, dev1 137.9, dev2 145.3, dev3 139.6, dev4 138.0, dev5 137.6] 59 shares
+Total 842.7 sol/s [dev0 139.7, dev1 136.2, dev2 145.7, dev3 141.7, dev4 135.8, dev5 136.7] 59 shares
+Total 842.7 sol/s [dev0 139.2, dev1 139.2, dev2 144.0, dev3 143.0, dev4 135.0, dev5 137.5] 61 shares
+Total 841.0 sol/s [dev0 136.9, dev1 139.6, dev2 145.3, dev3 142.0, dev4 137.3, dev5 136.6] 61 shares
+Total 840.1 sol/s [dev0 134.9, dev1 137.7, dev2 145.6, dev3 140.3, dev4 137.2, dev5 138.4] 61 shares
+Total 837.2 sol/s [dev0 133.5, dev1 138.6, dev2 145.7, dev3 139.5, dev4 137.7, dev5 138.9] 61 shares
+Total 832.4 sol/s [dev0 134.0, dev1 136.4, dev2 148.5, dev3 138.0, dev4 130.7, dev5 130.8] 62 shares
 ```
 
 
