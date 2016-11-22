@@ -731,7 +731,8 @@ void equihash_round(uint round,
     barrier(CLK_LOCAL_MEM_FENCE);
     
     for (i = localTid; i < cnt; i += THREADS_PER_ROW, p += SLOT_LEN*THREADS_PER_ROW) {
-      uchar x = ((*(__global uchar *)p) & mask) >> shift;
+//      uchar x = ((*(__global uchar *)p) & mask) >> shift;
+      uchar x = (uchar)(load4((__global ulong *)p, 0 ) & mask)  >> shift;
       uint slotIdx = atomic_inc(&slotCounters[x]);
       slotIdx = min(slotIdx, COLLISION_BUFFER_SIZE-1);
       slots[COLLISION_BUFFER_SIZE*x+slotIdx] = i;
@@ -814,8 +815,10 @@ void kernel_round8(__global char *ht_src, __global char *ht_dst,
 
 uint expand_ref(__global char *ht, uint xi_offset, uint row, uint slot)
 {
-    return *(__global uint *)(ht + row * NR_SLOTS * SLOT_LEN +
-	    slot * SLOT_LEN + xi_offset - 4);
+//    return *(__global uint *)(ht + row * NR_SLOTS * SLOT_LEN +
+//	    slot * SLOT_LEN + xi_offset - 4);
+	return load4((__global ulong *)(ht + row * NR_SLOTS * SLOT_LEN +
+          slot * SLOT_LEN + xi_offset - 4) , 0);
 }
 
 /*
@@ -937,8 +940,10 @@ void kernel_sols(__global char *ht0, __global char *ht1, __global sols_t *sols,
     for (i = get_local_id(0); i < THRD/THREADS_PER_ROW; i += get_local_size(0))
       counters[i] = 0;
     for (i = localGroupId; i < cnt; i += THREADS_PER_ROW, p += SLOT_LEN*THREADS_PER_ROW) {
-      refsPtr[i] = *(__global uint *)(p - 4);
-      dataPtr[i] = (*(__global uint *)p) & mask;
+      //refsPtr[i] = *(__global uint *)(p - 4);
+      //dataPtr[i] = (*(__global uint *)p) & mask;
+	refsPtr[i] = load4((__global ulong *)(p),-4);
+	dataPtr[i] = load4((__global ulong *)(p), 0) & mask;
     }
     barrier(CLK_LOCAL_MEM_FENCE);
     

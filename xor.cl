@@ -127,7 +127,7 @@ uint load4_last(__global ulong *p,uint offset){
         return r;
 }
 
-uint load4(__global ulong *p,uint offset){
+uint load4(__global ulong *p,int offset){
 	p=(__global ulong *)((__global char *)p + offset); 
         uint r;
         asm volatile ( "ld.global.cs.nc.b32  %0, [%1];\n\t" : "=r"(r) : "l"(p));
